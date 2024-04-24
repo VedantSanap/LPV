@@ -1,107 +1,70 @@
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
+#include <ctime>
 #include <omp.h>
-#include <chrono>
+
 using namespace std;
-using namespace std::chrono;
 
-void bubble(int *, int);
-void swap(int &, int &);
-
-void bubbleP(int *a, int n)
-{
-    for (int i = 0; i < n; i++)
-    {
-        int first = i % 2;
-
-#pragma omp parallel for shared(a, first)
-        for (int j = first; j < n - 1; j += 2)
-        {
-            if (a[j] > a[j + 1])
-            {
-                swap(a[j], a[j + 1]);
+// Sequential bubble sort
+void sequentialBubbleSort(int arr[], int n) {
+    for (int i = 0; i < n - 1; ++i) {
+        for (int j = 0; j < n - i - 1; ++j) {
+            if (arr[j] > arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
             }
         }
     }
 }
 
-void bubbleS(int *b, int n)
-{
-    for (int i = 0; i < n - 1; i++)
-    {
-
-        for (int j = 0; j < n - i- 1; j++)
-        {
-            if (b[j] > b[j + 1])
-            {
-                swap(b[j], b[j + 1]);
+// Parallel bubble sort
+void parallelBubbleSort(int arr[], int n) {
+    #pragma omp parallel for shared(arr)
+    for (int i = 0; i < n - 1; ++i) {
+        for (int j = i % 2; j < n - 1; j += 2) {
+            if (arr[j] > arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
             }
         }
     }
 }
 
-void swap(int &a, int &b)
-{
-
-    int test;
-    test = a;
-    a = b;
-    b = test;
+// Function to generate random array
+void generateRandomArray(int arr[], int n) {
+    srand(time(NULL));
+    for (int i = 0; i < n; ++i) {
+        arr[i] = rand() % 1000; // Random numbers between 0 and 999
+    }
 }
 
-int main()
-{
-
-    int *a, *b, n;
-    cout << "\n enter total no of elements=>";
-    cin >> n;
-    a = new int[n];
-    b = new int[n];
-    cout << "\n enter elements=>";
-    for (int i = 0; i < n; i++)
-    {
-        cin >> a[i];
-    }
-
-    for (int i = 0; i < n; i++)
-    {
-        b[i]=a[i];
-    }
-
-
-
-    auto startTime = high_resolution_clock::now();
-    bubbleP(a, n);
-
-
-    auto endTime = high_resolution_clock::now();
-
-    cout << "\n sorted array is=>";
-    for (int i = 0; i < n; i++)
-    {
-        cout << a[i];
+// Function to display array elements
+void displayArray(int arr[], int n) {
+    for (int i = 0; i < n; ++i) {
+        cout << arr[i] << " ";
     }
     cout << endl;
+}
 
-    auto seqTime = duration_cast<microseconds>(endTime - startTime).count() / 1000000.0;
-    cout << "Parallel Bubble Sort Time: " << fixed << seqTime << " seconds" << endl;
+int main() {
+    const int SIZE = 10000;
+    int arr[SIZE];
 
-    
+    // Generate random array
+    generateRandomArray(arr, SIZE);
 
+    // Sequential bubble sort
+    clock_t startTime = clock();
+    sequentialBubbleSort(arr, SIZE);
+    clock_t endTime = clock();
+    cout << "Sequential Bubble Sort Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
 
-    auto startTimeBS = high_resolution_clock::now();
-    bubbleS(b, n);
-    auto endTimeBS = high_resolution_clock::now();
+    // Generate random array again for parallel sorting
+    generateRandomArray(arr, SIZE);
 
-    cout << "\n sorted array is=>";
-    for (int i = 0; i < n; i++)
-    {
-        cout << b[i];
-    }
-    cout << endl;
-
-    auto seqTimeBS = duration_cast<microseconds>(endTimeBS - startTimeBS).count() / 1000000.0;
-    cout << "Sequential Bubble Sort Time: " << fixed << seqTimeBS << " seconds" << endl;
+    // Parallel bubble sort
+    startTime = clock();
+    parallelBubbleSort(arr, SIZE);
+    endTime = clock();
+    cout << "Parallel Bubble Sort Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
 
     return 0;
 }
