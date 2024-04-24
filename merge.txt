@@ -1,97 +1,207 @@
-#include<iostream>
-#include<stdlib.h>
-#include<omp.h>
+#include <iostream>
+#include <stdlib.h>
+#include <omp.h>
+#include <ctime>
 using namespace std;
 
+void mergesort(int a[], int i, int j );
+void merge(int a[], int sl, int el, int sr, int er);
 
-void mergesort(int a[],int i,int j);
-void merge(int a[],int sil,int eil,int sir,int eir);
-
-void mergesort(int a[],int i,int j)
+void mergesort(int a[], int i, int j)
 {
-	int mid;
-	if(i<j)
-	{
-    	mid=(i+j)/2;
+    int mid;
+    if(i<j)
+    {
+        mid=(i+j)/2;
+        #pragma omp parallel for sections
+        {
+            #pragma omp section
+            {
+                mergesort(a,i,mid);
+            }
 
-    	#pragma omp parallel sections
-    	{
+            #pragma omp section
+            {
+                mergesort(a,mid+1,j);
+            }
+        }
 
-        	#pragma omp section
-        	{
-            	mergesort(a,i,mid);
-        	}
+        merge(a,i,mid,mid+1,j);
 
-        	#pragma omp section
-        	{
-            	mergesort(a,mid+1,j);
-        	}
-    	}
-
-    	merge(a,i,mid,mid+1,j);
-	}
-
-}
-
-void merge(int a[],int sil,int eil,int sir,int eir)
-{
-	int temp[1000];
-	int i,j,k;
-	i=sil;
-	j=sir;
-	k=0;
-
-	while(i<=eil && j<=eir)
-	{
-    	if(a[i]<a[j])
-    	{
-        	temp[k++]=a[i++];
-    	}
-    	else
-    	{
-        	temp[k++]=a[j++];
     }
-	}
-
-	while(i<=eil)
-	{
-    	temp[k++]=a[i++];
-	}
-
-	while(j<=eir)
-	{
-    	temp[k++]=a[j++];
-	}
-
-	for(i=sil,j=0;i<=eir;i++,j++)
-	{
-    	a[i]=temp[j];
-	}
+    
 }
 
+void merge(int a[],int sil, int eil, int sir, int eir)
+{
+    int temp [1000];
+    int i,j,k;
+    i=sil;
+    j=sir;
+    k=0;
+
+    while(i<=eil && j<=eir)
+    {
+        if(a[i]<a[j])
+        {
+            temp[k++]=a[i++];
+
+        }
+        else{
+            temp[k++]=a[j++];
+        }
+
+    }
+
+    while(i<=eil)
+    {
+        temp[k++]=a[i++];
+    }
+
+    while(j<=eir)
+    {
+        temp[k++]=a[j++];
+    }
+
+    for(i=sil,j=0;i<=eir;i++,j++)
+    {
+        a[i]=temp[j];
+    }
+
+}
+
+void mergesortS(int a[], int si, int ei );
+void mergeS(int a[], int si, int mid, int ei);
+
+void mergesortS(int a[], int si, int ei)
+{
+    if(si>=ei)
+    {
+        return;
+    }
+    
+    int mid= si+(ei-si)/2;
+     mergesortS(a,si,mid);
+     mergesortS(a,mid+1,ei);
+     mergeS(a,si,mid,ei);
+
+    
+    
+}
+
+void mergeS(int a[],int si, int mid, int ei)
+{
+    int temp [1000];
+    int i,j,k;
+    i=si;
+    j=mid+1;
+    k=0;
+
+    while(i<=mid && j<=ei)
+    {
+        if(a[i]<a[j])
+        {
+            temp[k++]=a[i++];
+
+        }
+        else{
+            temp[k++]=a[j++];
+        }
+
+    }
+
+    while(i<=mid)
+    {
+        temp[k++]=a[i++];
+    }
+
+    while(j<=ei)
+    {
+        temp[k++]=a[j++];
+    }
+
+    for(i=si,j=0;i<=ei;i++,j++)
+    {
+        a[i]=temp[j];
+    }
+
+   
+
+}
+
+void generateRandomArray(int arr[], int n) {
+    srand(time(NULL));
+    for (int i = 0; i < n; ++i) {
+        arr[i] = rand() % 100000; // Random numbers between 0 and 999
+    }
+}
+
+void displayArray(int arr[], int n) {
+    for (int i = 0; i < n; ++i) {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+}
 
 int main()
 {
-	int *a,n,i;
-	cout<<"\n enter total no of elements=>";
-	cin>>n;
-	a= new int[n];
+    int *a,i,n;
+    cout<<"enter total no of elements ";
+    cin>>n;
+    a = new int[n];
+    
+    cout<<"enter elements ";
+    for(i=0;i<n;i++)
+    {
+        cin>>a[i];
+    }
+    cout<<endl;
+    mergesort(a,0,n-1);
 
-	cout<<"\n enter elements=>";
-	for(i=0;i<n;i++)
-	{
-    	cin>>a[i];
-	}
-   //	 start=.......
-//#pragma omp ..
-	mergesort(a, 0, n-1);
-//          stop  .
-	cout<<"\n sorted array is=>";
-	for(i=0;i<n;i++)
-	{
-    	cout<<"\n"<<a[i];
-	}
-  	// Cout<<Stop-Start
-	return 0;
+    cout<<"sorted array ";
+    for(i=0;i<n;i++)
+    {
+        cout<<a[i]<<" ";
+    }
+
+    cout<<endl;
+    cout<<"enter elements ";
+    for(i=0;i<n;i++)
+    {
+        cin>>a[i];
+    }
+    cout<<endl;
+    mergesortS(a,0,n-1);
+
+    cout<<"sorted array ";
+    for(i=0;i<n;i++)
+    {
+        cout<<a[i]<<" ";
+    }
+    cout<<endl;
+
+
+    const int SIZE = 100000;
+    int a[SIZE];
+
+    // Generate random array
+    generateRandomArray(a, SIZE);
+
+    // Sequential merge sort
+    clock_t startTime = clock();
+    mergesort(a, 0, SIZE - 1);
+    clock_t endTime = clock();
+    cout << "Sequential Merge Sort Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
+
+    // Generate random array again for parallel sorting
+    generateRandomArray(a, SIZE);
+
+    // Parallel merge sort
+    startTime = clock();
+    mergesortS(a, 0, SIZE - 1);
+    endTime = clock();
+    cout << "Parallel Merge Sort Time: " << double(endTime - startTime) / CLOCKS_PER_SEC << " seconds" << endl;
+
+
+    return 0;
 }
-
